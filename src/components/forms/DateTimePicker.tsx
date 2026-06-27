@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, Clock, ChevronDown, X } from "lucide-react";
 import { format, addDays, isToday, isTomorrow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -80,79 +80,67 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
 
   const formattedTime = format(value, "HH:mm");
 
-  // Bottom sheet rendered via portal so nothing clips it
-  const sheet = mounted ? createPortal(
-    <AnimatePresence>
-      {showTimePicker && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowTimePicker(false)}
-            style={{
-              position: "fixed", inset: 0, zIndex: 9998,
-              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
-            }}
-          />
-          {/* Sheet */}
-          <motion.div
-            key="sheet"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            style={{
-              position: "fixed", bottom: 0, left: 0, right: 0,
-              zIndex: 9999, background: "#0d1526",
-              borderRadius: "1.25rem 1.25rem 0 0",
-              maxHeight: "65vh", display: "flex", flexDirection: "column",
-              paddingBottom: "env(safe-area-inset-bottom, 0px)",
-            }}
-          >
-            {/* Handle + header */}
-            <div style={{ flexShrink: 0, padding: "12px 20px 0" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.15)", margin: "0 auto 14px" }} />
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                <p style={{ color: "white", fontWeight: 600, fontSize: 15 }}>Hora de salida</p>
-                <button onClick={() => setShowTimePicker(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-            {/* Scrollable list */}
-            <div
-              ref={listRef}
-              style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}
-            >
-              {TIME_OPTIONS.map((t) => {
-                const selected = t === formattedTime;
-                return (
-                  <button
-                    key={t}
-                    onClick={() => pickTime(t)}
-                    style={{
-                      display: "block", width: "100%",
-                      padding: "15px 20px",
-                      textAlign: "center", fontSize: 17,
-                      fontWeight: selected ? 700 : 400,
-                      color: selected ? "#3385ff" : "rgba(255,255,255,0.85)",
-                      background: selected ? "rgba(51,133,255,0.10)" : "transparent",
-                      border: "none", borderBottom: "1px solid rgba(255,255,255,0.05)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>,
+  // Bottom sheet via portal — no animation wrapper so it always renders
+  const sheet = mounted && showTimePicker ? createPortal(
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={() => setShowTimePicker(false)}
+        style={{
+          position: "fixed", inset: 0, zIndex: 9998,
+          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+        }}
+      />
+      {/* Sheet */}
+      <div
+        style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          zIndex: 9999, background: "#0d1526",
+          borderRadius: "1.25rem 1.25rem 0 0",
+          maxHeight: "65vh", display: "flex", flexDirection: "column",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
+        }}
+      >
+        {/* Handle + header */}
+        <div style={{ flexShrink: 0, padding: "12px 20px 0" }}>
+          <div style={{ width: 36, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.15)", margin: "0 auto 14px" }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <p style={{ color: "white", fontWeight: 600, fontSize: 15 }}>Hora de salida</p>
+            <button onClick={() => setShowTimePicker(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+        {/* Scrollable list */}
+        <div
+          ref={listRef}
+          style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}
+        >
+          {TIME_OPTIONS.map((t) => {
+            const selected = t === formattedTime;
+            return (
+              <button
+                key={t}
+                onClick={() => pickTime(t)}
+                style={{
+                  display: "block", width: "100%",
+                  padding: "15px 20px",
+                  textAlign: "center", fontSize: 17,
+                  fontWeight: selected ? 700 : 400,
+                  color: selected ? "#3385ff" : "rgba(255,255,255,0.85)",
+                  background: selected ? "rgba(51,133,255,0.10)" : "transparent",
+                  border: "none", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  cursor: "pointer",
+                }}
+              >
+                {t}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>,
     document.body
   ) : null;
 
