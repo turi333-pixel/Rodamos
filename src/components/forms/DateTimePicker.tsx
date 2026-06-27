@@ -70,11 +70,14 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
     if (showTimePicker) { setShowTimePicker(false); return; }
     if (!timePillRef.current) return;
     const rect = timePillRef.current.getBoundingClientRect();
-    const dropW = Math.max(rect.width, 200);
+    const dropW = 180;
     const dropH = 300;
-    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const padding = 8;
+    const spaceBelow = window.innerHeight - rect.bottom - padding;
     const top = spaceBelow >= dropH ? rect.bottom + 6 : rect.top - dropH - 6;
-    setDropPos({ top, left: rect.left, width: dropW });
+    // Clamp left so dropdown never overflows right edge
+    const left = Math.min(rect.left, window.innerWidth - dropW - padding);
+    setDropPos({ top, left, width: dropW });
     setShowTimePicker(true);
   };
 
@@ -162,19 +165,13 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
         })}
       </div>
 
-      {/* Footer actions */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex" }}>
+      {/* Footer */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
         <button
           onClick={pickNow}
-          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 8px", color: "#3385ff", fontSize: 13, background: "none", border: "none", cursor: "pointer", borderRight: "1px solid rgba(255,255,255,0.07)" }}
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 8px", color: "#3385ff", fontSize: 13, background: "none", border: "none", cursor: "pointer" }}
         >
           <Clock size={13} /> Ahora
-        </button>
-        <button
-          onClick={() => { setShowTimePicker(false); setQuick("custom"); setShowDatePicker(true); }}
-          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 8px", color: "#3385ff", fontSize: 13, background: "none", border: "none", cursor: "pointer" }}
-        >
-          <Calendar size={13} /> Elegir en calendario
         </button>
       </div>
     </div>,
