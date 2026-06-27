@@ -1,8 +1,8 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Clock, ChevronDown } from "lucide-react";
+import { Calendar, Clock, ChevronDown, X } from "lucide-react";
 import { format, addDays, isToday, isTomorrow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -33,54 +33,19 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
   const [quick, setQuick] = useState<QuickDate>(getQuick());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const timePillRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Close dropdown on outside click
+  // Scroll selected time into view when sheet opens
   useEffect(() => {
-    if (!showTimePicker) return;
-    const handleClick = (e: Event) => {
-      if (
-        timePillRef.current?.contains(e.target as Node) ||
-        dropdownRef.current?.contains(e.target as Node)
-      ) return;
-      setShowTimePicker(false);
-    };
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("touchstart", handleClick);
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("touchstart", handleClick);
-    };
-  }, [showTimePicker]);
-
-  const openTimePicker = () => {
-    if (!timePillRef.current) return;
-    const rect = timePillRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const dropH = 240;
-
-    if (spaceBelow >= dropH + 12) {
-      setDropdownStyle({
-        position: "fixed",
-        top: rect.bottom + 6,
-        left: rect.left,
-        width: Math.max(rect.width, 160),
-      });
-    } else {
-      setDropdownStyle({
-        position: "fixed",
-        bottom: window.innerHeight - rect.top + 6,
-        left: rect.left,
-        width: Math.max(rect.width, 160),
-      });
-    }
-    setShowTimePicker((v) => !v);
-  };
+    if (!showTimePicker || !listRef.current) return;
+    const idx = TIME_OPTIONS.indexOf(format(value, "HH:mm"));
+    if (idx < 0) return;
+    const item = listRef.current.children[idx] as HTMLElement | undefined;
+    item?.scrollIntoView({ block: "center" });
+  }, [showTimePicker, value]);
 
   const setQuickDate = (q: QuickDate) => {
     setQuick(q);
@@ -99,7 +64,7 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
     }
   };
 
-  const setTime = (t: string) => {
+  const pickTime = (t: string) => {
     const [h, m] = t.split(":").map(Number);
     const d = new Date(value);
     d.setHours(h, m, 0, 0);
@@ -115,43 +80,79 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
 
   const formattedTime = format(value, "HH:mm");
 
-  const dropdown = mounted && showTimePicker ? createPortal(
-    <div
-      ref={dropdownRef}
-      style={{
-        ...dropdownStyle,
-        zIndex: 9999,
-        borderRadius: "1rem",
-        background: "#0d1526",
-        border: "1px solid rgba(255,255,255,0.12)",
-        boxShadow: "0 24px 64px rgba(0,0,0,0.7)",
-        maxHeight: 240,
-        overflowY: "auto",
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      {TIME_OPTIONS.map((t) => (
-        <button
-          key={t}
-          onMouseDown={(e) => { e.preventDefault(); setTime(t); }}
-          onTouchEnd={(e) => { e.preventDefault(); setTime(t); }}
-          style={{
-            display: "block",
-            width: "100%",
-            padding: "10px 16px",
-            textAlign: "left",
-            fontSize: 14,
-            fontWeight: formattedTime === t ? 700 : 400,
-            color: formattedTime === t ? "#3385ff" : "rgba(255,255,255,0.85)",
-            background: formattedTime === t ? "rgba(51,133,255,0.10)" : "transparent",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          {t}
-        </button>
-      ))}
-    </div>,
+  // Bottom sheet rendered via portal so nothing clips it
+  const sheet = mounted ? createPortal(
+    <AnimatePresence>
+      {showTimePicker && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowTimePicker(false)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 9998,
+              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
+            }}
+          />
+          {/* Sheet */}
+          <motion.div
+            key="sheet"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            style={{
+              position: "fixed", bottom: 0, left: 0, right: 0,
+              zIndex: 9999, background: "#0d1526",
+              borderRadius: "1.25rem 1.25rem 0 0",
+              maxHeight: "65vh", display: "flex", flexDirection: "column",
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            }}
+          >
+            {/* Handle + header */}
+            <div style={{ flexShrink: 0, padding: "12px 20px 0" }}>
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.15)", margin: "0 auto 14px" }} />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                <p style={{ color: "white", fontWeight: 600, fontSize: 15 }}>Hora de salida</p>
+                <button onClick={() => setShowTimePicker(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            {/* Scrollable list */}
+            <div
+              ref={listRef}
+              style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}
+            >
+              {TIME_OPTIONS.map((t) => {
+                const selected = t === formattedTime;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => pickTime(t)}
+                    style={{
+                      display: "block", width: "100%",
+                      padding: "15px 20px",
+                      textAlign: "center", fontSize: 17,
+                      fontWeight: selected ? 700 : 400,
+                      color: selected ? "#3385ff" : "rgba(255,255,255,0.85)",
+                      background: selected ? "rgba(51,133,255,0.10)" : "transparent",
+                      border: "none", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>,
     document.body
   ) : null;
 
@@ -191,20 +192,16 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
 
         {/* Time pill */}
         <button
-          ref={timePillRef}
-          onClick={openTimePicker}
+          onClick={() => setShowTimePicker(true)}
           className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/6 border border-white/8 text-sm text-white hover:bg-white/10 press-effect"
         >
           <Clock size={15} className="text-bmw-400" />
           <span className="font-medium tabular-nums">{formattedTime}</span>
-          <ChevronDown
-            size={13}
-            className={cn("text-zinc-500 transition-transform duration-200", showTimePicker && "rotate-180")}
-          />
+          <ChevronDown size={13} className="text-zinc-500" />
         </button>
       </div>
 
-      {dropdown}
+      {sheet}
 
       {/* Date input for custom */}
       <AnimatePresence>
