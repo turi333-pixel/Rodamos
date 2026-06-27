@@ -1,8 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ChevronRight, Zap, Settings, Wind, Droplets, Clock, Calendar, Bike } from "lucide-react";
-import { isToday, isTomorrow, addDays, format as formatDate } from "date-fns";
+import { Bell, ChevronRight, Zap, Settings, Wind, Droplets, Bike } from "lucide-react";
+import { format as formatDate } from "date-fns";
+import { DateTimePicker } from "@/components/forms/DateTimePicker";
 import { es } from "date-fns/locale";
 import { useAppStore } from "@/store";
 import { LocationSearch } from "@/components/forms/LocationSearch";
@@ -366,50 +367,11 @@ function HomePage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="rounded-3xl overflow-hidden"
+          className="rounded-3xl"
           style={{ background: "rgba(10,12,22,0.94)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
         >
           <div className="p-4">
-            <div className="flex items-center gap-2 mb-3.5">
-              <Calendar size={15} style={{ color: "rgba(51,133,255,0.8)" }} />
-              <p className="text-sm font-semibold text-white" style={{ letterSpacing: "-0.01em" }}>Elige cuando</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {(["Hoy", "Manana"] as const).map((label, i) => {
-                const active = i === 0 ? isToday(date) : isTomorrow(date);
-                const displayLabel = i === 0 ? "Hoy" : "Mañana";
-                return (
-                  <button
-                    key={label}
-                    onClick={() => { const d = addDays(new Date(), i); d.setHours(date.getHours(), date.getMinutes(), 0, 0); setDate(d); }}
-                    className="press-effect flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold"
-                    style={{
-                      background: active ? "transparent" : "rgba(255,255,255,0.05)",
-                      border: `1.5px solid ${active ? "#3385ff" : "rgba(255,255,255,0.08)"}`,
-                      color: active ? "#3385ff" : "rgba(148,163,184,0.55)",
-                    }}
-                  >
-                    <Calendar size={12} />{displayLabel}
-                  </button>
-                );
-              })}
-              {!isToday(date) && !isTomorrow(date) && (
-                <button className="press-effect flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold"
-                  style={{ border: "1.5px solid #3385ff", color: "#3385ff", background: "transparent" }}>
-                  <Calendar size={12} />{formatDate(date, "d MMM", { locale: es })}
-                </button>
-              )}
-              <div className="flex-1" />
-              <button
-                onClick={() => { const h = date.getHours(); const next = h >= 18 ? 7 : h + 1; const d = new Date(date); d.setHours(next, 0, 0, 0); setDate(d); }}
-                className="press-effect flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(255,255,255,0.1)", color: "rgba(210,210,220,0.85)" }}
-              >
-                <Clock size={12} style={{ color: "#3385ff" }} />
-                <span className="tabular-nums" suppressHydrationWarning>{formatDate(date, "HH:mm")}</span>
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: "rgba(148,163,184,0.45)" }}><path d="M6 9l6 6 6-6" /></svg>
-              </button>
-            </div>
+            <DateTimePicker value={date} onChange={setDate} />
           </div>
         </motion.div>
 
