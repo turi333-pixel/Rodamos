@@ -69,25 +69,31 @@ async function mapboxGeocode(q: string, token: string) {
 async function nominatimGeocode(q: string) {
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&accept-language=es&limit=5&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&accept-language=es&limit=8&addressdetails=1&namedetails=1`,
       { headers: { "User-Agent": "Rodamos/1.0 (rodamos.app)" } }
     );
     const data = await res.json();
     const results = data.map((item: Record<string, unknown>) => {
       const address = item.address as Record<string, string> | undefined;
-      // Build a clean short name (city > town > village > municipality > first part of display_name)
-      const name =
+      // Use the OSM element's own name first, then fall back to address hierarchy
+      const name = (item.name as string) || (
+        address?.road ??
+        address?.pedestrian ??
+        address?.beach ??
+        address?.natural ??
+        address?.leisure ??
+        address?.amenity ??
         address?.city ??
         address?.town ??
         address?.village ??
-        address?.municipality ??
-        address?.county ??
         (item.display_name as string)?.split(",")[0] ??
-        "";
-      // Build a readable address (name + region + country)
+        ""
+      );
+      // Context line: city/town/village + region + country
+      const locality = address?.city ?? address?.town ?? address?.village ?? address?.municipality ?? "";
       const region = address?.state ?? address?.province ?? "";
       const country = address?.country ?? "";
-      const shortAddress = [region, country].filter(Boolean).join(", ");
+      const shortAddress = [locality, region, country].filter(Boolean).join(", ");
       return {
         id:          item.place_id ?? Math.random().toString(36),
         name,
