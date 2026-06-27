@@ -19,8 +19,24 @@ const highlightColors: Record<string, string> = {
   patrimonio: "#f59e0b",
 };
 
+function resolveRoadQuality(raw: string): { label: string; detail: string; cfg: typeof ROAD_QUALITY[string] } {
+  // AI sometimes returns a full sentence — extract quality from known keywords
+  const lower = raw.toLowerCase();
+  let label = "Regular";
+  if (lower.includes("excelente") || lower.includes("excellent")) label = "Excelente";
+  else if (lower.includes("bueno") || lower.includes("buena") || lower.includes("good")) label = "Bueno";
+  else if (lower.includes("malo") || lower.includes("mala") || lower.includes("bad")) label = "Malo";
+  // If the raw value IS a short label, use it directly; otherwise it's the detail text
+  const isShortLabel = Object.keys(ROAD_QUALITY).includes(raw);
+  return {
+    label,
+    detail: isShortLabel ? "" : raw,
+    cfg: ROAD_QUALITY[label] ?? ROAD_QUALITY["Regular"],
+  };
+}
+
 export function RouteInsightsCard({ insights }: { insights: RouteInsights }) {
-  const rq = ROAD_QUALITY[insights.roadQuality] ?? ROAD_QUALITY["Regular"];
+  const { label: rqLabel, detail: rqDetail, cfg: rq } = resolveRoadQuality(insights.roadQuality);
 
   const quickStats = [
     { emoji: "📡", label: "Radares", value: insights.speedCameras },
@@ -35,7 +51,7 @@ export function RouteInsightsCard({ insights }: { insights: RouteInsights }) {
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
           <p className="text-2xs" style={{ color: "rgba(148,163,184,0.55)" }}>Calidad de calzada</p>
-          <span className="text-xs font-bold" style={{ color: rq.color }}>{insights.roadQuality}</span>
+          <span className="text-xs font-bold" style={{ color: rq.color }}>{rqLabel}</span>
         </div>
         <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
           <motion.div
@@ -46,6 +62,9 @@ export function RouteInsightsCard({ insights }: { insights: RouteInsights }) {
             transition={{ duration: 0.9, delay: 0.25 }}
           />
         </div>
+        {rqDetail && (
+          <p className="text-xs mt-2 leading-snug" style={{ color: "rgba(148,163,184,0.65)" }}>{rqDetail}</p>
+        )}
       </div>
 
       {/* Famous roads chips */}
@@ -87,12 +106,12 @@ export function RouteInsightsCard({ insights }: { insights: RouteInsights }) {
       )}
 
       {/* Highlights */}
-      {insights.highlights.length > 0 && (
+      {insights.highlights.filter(h => h.name?.trim()).length > 0 && (
         <div className="mb-4 space-y-2">
           <p className="text-2xs uppercase tracking-widest mb-2" style={{ color: "rgba(148,163,184,0.5)" }}>
             Puntos de interés
           </p>
-          {insights.highlights.map((h, i) => {
+          {insights.highlights.filter(h => h.name?.trim()).map((h, i) => {
             const color = highlightColors[h.type] ?? "#14b8a6";
             return (
               <motion.div
