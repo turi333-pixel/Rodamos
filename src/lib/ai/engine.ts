@@ -48,7 +48,7 @@ Devuelve SOLO este array JSON, sin texto adicional:
 ]
 Tipos válidos: mirador, cafe, restaurante, foto, descanso, moto-cafe, combustible`;
 
-  const raw = await callClaude(prompt, 1000);
+  const raw = await callClaude(prompt, 700);
   const stops = parseJSON<Array<{
     id: string; name: string; type: string; description: string;
     why: string; distanceFromStart: number; distanceRemaining: number; rating: number;
@@ -80,7 +80,7 @@ export async function analyzeWithAI(
 
   // Run enrichment + stops generation in parallel
   const [enrichment, aiStops] = await Promise.allSettled([
-    callClaude(buildEnrichmentPrompt(base, weather, routeData, stops), 2000).then(raw => parseJSON<Partial<{
+    callClaude(buildEnrichmentPrompt(base, weather, routeData, stops), 1400).then(raw => parseJSON<Partial<{
       recommendation: string;
       weather: Partial<AnalysisResult["weather"]>;
       roadConditions: Partial<Pick<AnalysisResult["roadConditions"], "interpretation" | "surface">>;

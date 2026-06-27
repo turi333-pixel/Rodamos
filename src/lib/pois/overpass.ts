@@ -16,7 +16,7 @@ async function overpassQuery(ql: string): Promise<{ elements: Record<string, unk
     method: "POST",
     body: `data=${encodeURIComponent(ql)}`,
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    signal: AbortSignal.timeout(12000),
+    signal: AbortSignal.timeout(6000),
   });
   if (!res.ok) throw new Error(`Overpass ${res.status}`);
   return res.json();

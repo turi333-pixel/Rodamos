@@ -43,17 +43,26 @@ export async function POST(request: NextRequest) {
     const route: RouteInput = { destination, origin, date: routeDate };
 
     // ── 2. Fetch all real data in parallel ────────────────────────────────────
-    const [weather, routeData, stops, emergency] = await Promise.all([
-      // Weather: Open-Meteo first (free, no key), then OpenWeatherMap as secondary
+    // Emergency runs in background with short timeout — don't block AI on it
+    const emergencyPromise = Promise.race([
+      getNearbyEmergency(coords.lat, coords.lng),
+      new Promise<Awaited<ReturnType<typeof getNearbyEmergency>>>(
+        resolve => setTimeout(() => resolve({ hospitals: [], dealers: [], workshops: [] }), 5000)
+      ),
+    ]);
+
+    const [weather, routeData, stops] = await Promise.all([
       getOpenMeteoWeather(coords.lat, coords.lng, routeDate).then(
         w => w ?? getWeather(coords, routeDate)
       ),
-      // Routing: OSRM (free, no key)
       origin?.coordinates ? getRouteData(origin.coordinates, coords) : Promise.resolve(null),
-      // POIs at destination: Overpass API (free, no key)
       getNearbyStops(coords.lat, coords.lng),
-      // Emergency services: Overpass API (free, no key)
-      getNearbyEmergency(coords.lat, coords.lng),
+    ]);
+
+    // Emergency: use whatever arrived, default to empty if still pending
+    const emergency = await Promise.race([
+      emergencyPromise,
+      Promise.resolve({ hospitals: [], dealers: [], workshops: [] }),
     ]);
 
     if (!weather) {
@@ -74,7 +83,7 @@ export async function POST(request: NextRequest) {
       try {
         const enriched = await Promise.race([
           analyzeWithAI(baseResult, weather, routeData, stops),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("AI timeout")), 20000)),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("AI timeout")), 14000)),
         ]);
         return NextResponse.json(enriched);
       } catch (aiErr) {
