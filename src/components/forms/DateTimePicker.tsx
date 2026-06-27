@@ -140,30 +140,31 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
             className="overflow-hidden"
           >
             <div className="glass-card-sm p-4">
-              <p className="text-xs text-zinc-400 mb-3">Hora de salida — 24h</p>
-              <div className="overflow-y-auto" style={{ maxHeight: "13rem" }}>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {Array.from({ length: 48 }, (_, i) => {
-                    const h = Math.floor(i / 2);
-                    const m = i % 2 === 0 ? 0 : 30;
-                    const selected = value.getHours() === h && value.getMinutes() === m;
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => setTime(h, m)}
-                        className={cn(
-                          "py-2 text-xs font-medium rounded-xl transition-all press-effect",
-                          selected
-                            ? "bg-bmw-500 text-white"
-                            : "bg-white/6 text-zinc-300 hover:bg-white/10"
-                        )}
-                      >
-                        {String(h).padStart(2, "0")}:{String(m).padStart(2, "0")}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <p className="text-xs text-zinc-400 mb-3">Hora de salida</p>
+              <select
+                value={formattedTime}
+                onChange={(e) => {
+                  const [h, m] = e.target.value.split(":").map(Number);
+                  setTime(h, m);
+                }}
+                className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none appearance-none"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  color: "white",
+                }}
+              >
+                {Array.from({ length: 48 }, (_, i) => {
+                  const h = Math.floor(i / 2);
+                  const m = i % 2 === 0 ? 0 : 30;
+                  const t = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+                  return (
+                    <option key={i} value={t} style={{ background: "#0f172a" }}>
+                      {t}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
           </motion.div>
         )}
