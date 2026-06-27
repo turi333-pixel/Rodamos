@@ -413,69 +413,55 @@ function HomePage() {
           </div>
         </motion.div>
 
-        {/* Weather card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.42 }}
-          className="rounded-3xl overflow-hidden"
-          style={{ background: "rgba(10,12,22,0.94)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
-        >
-          {homeWeather ? (
-            <div className="p-4">
-              <div className="flex items-start gap-3">
-                {/* Temperature */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-4xl">{weatherEmoji(homeWeather.icon)}</span>
-                  <div>
-                    <p className="text-3xl font-bold text-white leading-none" style={{ letterSpacing: "-0.03em" }}>{homeWeather.temp}{"°C"}</p>
-                    <p className="text-xs mt-0.5 truncate" style={{ color: "rgba(161,161,171,0.7)" }}>{homeWeather.description}</p>
-                    <p className="text-xs" style={{ color: "rgba(161,161,171,0.45)" }}>{"Sensacion "}{homeWeather.temp + 2}{"°C"}</p>
+        {/* Weather card — only render when data is available */}
+        <AnimatePresence>
+          {homeWeather && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ delay: 0.42 }}
+              className="rounded-3xl overflow-hidden"
+              style={{ background: "rgba(10,12,22,0.94)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
+            >
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-4xl">{weatherEmoji(homeWeather.icon)}</span>
+                    <div>
+                      <p className="text-3xl font-bold text-white leading-none" style={{ letterSpacing: "-0.03em" }}>{homeWeather.temp}{"°C"}</p>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: "rgba(161,161,171,0.7)" }}>{homeWeather.description}</p>
+                      <p className="text-xs" style={{ color: "rgba(161,161,171,0.45)" }}>{"Sensacion "}{homeWeather.temp + 2}{"°C"}</p>
+                    </div>
                   </div>
-                </div>
-                {/* Rain + Wind */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Droplets size={13} style={{ color: "#60a5fa" }} />
-                    <span className="text-sm font-bold text-white">{homeWeather.rainProb}{"%"}</span>
-                    <span className="text-xs" style={{ color: "rgba(161,161,171,0.5)" }}>Lluvia</span>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Droplets size={13} style={{ color: "#60a5fa" }} />
+                      <span className="text-sm font-bold text-white">{homeWeather.rainProb}{"%"}</span>
+                      <span className="text-xs" style={{ color: "rgba(161,161,171,0.5)" }}>Lluvia</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Wind size={13} style={{ color: "#94a3b8" }} />
+                      <span className="text-sm font-bold text-white">{homeWeather.windSpeed}</span>
+                      <span className="text-xs" style={{ color: "rgba(161,161,171,0.5)" }}>km/h</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Wind size={13} style={{ color: "#94a3b8" }} />
-                    <span className="text-sm font-bold text-white">{homeWeather.windSpeed}</span>
-                    <span className="text-xs" style={{ color: "rgba(161,161,171,0.5)" }}>km/h</span>
-                  </div>
-                </div>
-                {/* Road condition */}
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
                     <p className="text-sm font-bold" style={{ color: homeWeather.score >= 80 ? "#22c55e" : homeWeather.score >= 60 ? "#f59e0b" : "#ef4444" }}>
                       {homeWeather.score >= 80 ? "Buena" : homeWeather.score >= 60 ? "Moderada" : "Adversa"}
                     </p>
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center"
-                      style={{ background: "rgba(148,163,184,0.12)", fontSize: 9, color: "rgba(148,163,184,0.5)", fontWeight: 700 }}>i</div>
+                    <p className="text-xs text-right leading-tight" style={{ color: "rgba(161,161,171,0.45)" }}>{"Condicion"}<br />{"del asfalto"}</p>
                   </div>
-                  <p className="text-xs text-right leading-tight" style={{ color: "rgba(161,161,171,0.45)" }}>{"Condicion"}<br />{"del asfalto"}</p>
+                </div>
+                <div className="mt-3 relative h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
+                  <div className="absolute inset-0 rounded-full" style={{ background: "linear-gradient(to right, #22c55e 0%, #84cc16 35%, #f59e0b 60%, #ef4444 100%)" }} />
+                  <div className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-white"
+                    style={{ left: `${Math.max(5, Math.min(90, 100 - homeWeather.score))}%`, transform: "translate(-50%, -50%)", boxShadow: "0 0 0 2px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.4)" }} />
                 </div>
               </div>
-              {/* Condition bar */}
-              <div className="mt-3 relative h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
-                <div className="absolute inset-0 rounded-full" style={{ background: "linear-gradient(to right, #22c55e 0%, #84cc16 35%, #f59e0b 60%, #ef4444 100%)" }} />
-                <div className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-white"
-                  style={{ left: `${Math.max(5, Math.min(90, 100 - homeWeather.score))}%`, transform: "translate(-50%, -50%)", boxShadow: "0 0 0 2px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.4)" }} />
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl shimmer flex-shrink-0" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-28 rounded-full shimmer" />
-                <div className="h-3 w-20 rounded-full shimmer" />
-              </div>
-              <div className="w-20 h-8 rounded-xl shimmer" />
-            </div>
+            </motion.div>
           )}
-        </motion.div>
+        </AnimatePresence>
 
         {/* Analyze CTA */}
         <motion.div
