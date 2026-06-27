@@ -15,11 +15,30 @@ const STOP_CFG: Record<BestStop["type"], { emoji: string; color: string; label: 
   descanso:    { emoji: "🛋️", color: "#14b8a6", label: "Descanso" },
 };
 
+const EMPTY_MESSAGES = [
+  "Esta vez quizás no paramos... solo asfalto y acelerador. 🏍️💨",
+  "Ninguna parada hoy. A veces la mejor ruta es no detenerse. ¡A rodar!",
+  "Sin paradas recomendadas. La carretera te pertenece toda.",
+  "¿Parar? Hoy no. El destino no espera. ¡Dale gas! ⚡",
+  "La IA no encontró paradas, pero el viento en la cara no necesita reseñas.",
+];
+
 export function BestStopsCard({ stops }: { stops: BestStop[] }) {
+  const validStops = stops.filter(s => s.name?.trim());
+  const emptyMsg = EMPTY_MESSAGES[Math.floor(Math.random() * EMPTY_MESSAGES.length)];
+
   return (
-    <CardShell theme="stops" icon="📍" title="Mejores Paradas" subtitle={`${stops.length} seleccionadas por la IA`} delay={0.35}>
+    <CardShell theme="stops" icon="📍" title="Mejores Paradas" subtitle={validStops.length > 0 ? `${validStops.length} seleccionadas` : "En ruta directa"} delay={0.35}>
+      {validStops.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
+          <span className="text-4xl">🛣️</span>
+          <p className="text-sm text-center leading-relaxed px-2" style={{ color: "rgba(148,163,184,0.65)" }}>
+            {emptyMsg}
+          </p>
+        </div>
+      ) : (
       <div className="space-y-3">
-        {stops.map((stop, i) => {
+        {validStops.map((stop, i) => {
           const cfg = STOP_CFG[stop.type];
           return (
             <motion.div
@@ -77,6 +96,7 @@ export function BestStopsCard({ stops }: { stops: BestStop[] }) {
           );
         })}
       </div>
+      )}
     </CardShell>
   );
 }
