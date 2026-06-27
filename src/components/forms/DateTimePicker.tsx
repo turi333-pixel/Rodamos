@@ -80,64 +80,56 @@ export function DateTimePicker({ value, onChange, className }: DateTimePickerPro
 
   const formattedTime = format(value, "HH:mm");
 
-  // Bottom sheet via portal — no animation wrapper so it always renders
+  // Bottom sheet via portal
   const sheet = mounted && showTimePicker ? createPortal(
     <>
-      {/* Backdrop */}
-      <div
-        onClick={() => setShowTimePicker(false)}
-        style={{
-          position: "fixed", inset: 0, zIndex: 9998,
-          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-        }}
-      />
-      {/* Sheet */}
-      <div
-        style={{
-          position: "fixed", bottom: 0, left: 0, right: 0,
-          zIndex: 9999, background: "#0d1526",
-          borderRadius: "1.25rem 1.25rem 0 0",
-          maxHeight: "65vh", display: "flex", flexDirection: "column",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
-        }}
-      >
+      <div onClick={() => setShowTimePicker(false)} style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)" }} />
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
+        background: "#0d1526",
+        borderRadius: "1.25rem 1.25rem 0 0",
+        maxHeight: "52vh", display: "flex", flexDirection: "column",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        boxShadow: "0 -4px 32px rgba(0,0,0,0.5)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderBottom: "none",
+      }}>
         {/* Handle + header */}
-        <div style={{ flexShrink: 0, padding: "12px 20px 0" }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.15)", margin: "0 auto 14px" }} />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-            <p style={{ color: "white", fontWeight: 600, fontSize: 15 }}>Hora de salida</p>
-            <button onClick={() => setShowTimePicker(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
-              <X size={18} />
+        <div style={{ flexShrink: 0, padding: "10px 16px 0" }}>
+          <div style={{ width: 32, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.12)", margin: "0 auto 10px" }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <p style={{ color: "rgba(255,255,255,0.6)", fontWeight: 500, fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>Hora de salida</p>
+            <button onClick={() => setShowTimePicker(false)} style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 2, lineHeight: 1 }}>
+              <X size={15} />
             </button>
           </div>
         </div>
-        {/* Scrollable list */}
-        <div
-          ref={listRef}
-          style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}
-        >
-          {TIME_OPTIONS.map((t) => {
-            const selected = t === formattedTime;
-            return (
-              <button
-                key={t}
-                onClick={() => pickTime(t)}
-                style={{
-                  display: "block", width: "100%",
-                  padding: "15px 20px",
-                  textAlign: "center", fontSize: 17,
-                  fontWeight: selected ? 700 : 400,
-                  color: selected ? "#3385ff" : "rgba(255,255,255,0.85)",
-                  background: selected ? "rgba(51,133,255,0.10)" : "transparent",
-                  border: "none", borderBottom: "1px solid rgba(255,255,255,0.05)",
-                  cursor: "pointer",
-                }}
-              >
-                {t}
-              </button>
-            );
-          })}
+        {/* 4-column grid */}
+        <div ref={listRef} style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"], padding: "8px 12px 12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+            {TIME_OPTIONS.map((t) => {
+              const selected = t === formattedTime;
+              return (
+                <button
+                  key={t}
+                  onClick={() => pickTime(t)}
+                  style={{
+                    padding: "8px 4px",
+                    borderRadius: 10,
+                    fontSize: 13,
+                    fontWeight: selected ? 700 : 400,
+                    color: selected ? "#3385ff" : "rgba(255,255,255,0.7)",
+                    background: selected ? "rgba(51,133,255,0.12)" : "rgba(255,255,255,0.04)",
+                    border: selected ? "1px solid rgba(51,133,255,0.3)" : "1px solid transparent",
+                    cursor: "pointer",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </>,
