@@ -33,18 +33,27 @@ function parseJSON<T>(raw: string): T {
 
 // ─── Dedicated stops generator ────────────────────────────────────────────────
 
-async function generateStops(origin: string, dest: string, distKm: number): Promise<BestStop[]> {
-  const prompt = `Soy motociclista y voy de ${origin} a ${dest} (${distKm > 0 ? `${distKm} km` : "ruta"}).
-Sugiere 5 paradas reales y específicas para esta ruta: miradores, restaurantes locales, cafeterías de moteros, spots de foto, puntos de descanso.
-Usa nombres reales de lugares que existan en esa zona.
+async function generateStops(
+  origin: string,
+  dest: string,
+  distKm: number,
+  destCoords?: { lat: number; lng: number }
+): Promise<BestStop[]> {
+  const coordsHint = destCoords
+    ? `Coordenadas exactas del destino: ${destCoords.lat.toFixed(4)}, ${destCoords.lng.toFixed(4)}.`
+    : "";
+  const prompt = `Soy motociclista y voy de ${origin} a ${dest} (${distKm > 0 ? `${distKm} km` : "ruta corta"}).
+${coordsHint}
+IMPORTANTE: Sugiere ÚNICAMENTE lugares que existan físicamente en el trayecto entre ${origin} y ${dest} o muy cerca de esa ruta. NO uses lugares de otras ciudades o regiones. Si no conoces lugares reales en esa zona específica, usa nombres genéricos descriptivos del tipo "Mirador cerca de ${dest}".
 
-Devuelve SOLO este array JSON, sin texto adicional:
+Sugiere 4 paradas reales: miradores, restaurantes locales, cafeterías, spots de foto.
+
+Devuelve SOLO este array JSON:
 [
-  {"id":"ai-1","name":"Nombre real del lugar","type":"mirador","description":"Descripción breve","why":"Por qué parar aquí","distanceFromStart":${Math.round(distKm * 0.2)},"distanceRemaining":${Math.round(distKm * 0.8)},"rating":4.7},
-  {"id":"ai-2","name":"...","type":"cafe","description":"...","why":"...","distanceFromStart":${Math.round(distKm * 0.4)},"distanceRemaining":${Math.round(distKm * 0.6)},"rating":4.5},
-  {"id":"ai-3","name":"...","type":"restaurante","description":"...","why":"...","distanceFromStart":${Math.round(distKm * 0.6)},"distanceRemaining":${Math.round(distKm * 0.4)},"rating":4.6},
-  {"id":"ai-4","name":"...","type":"foto","description":"...","why":"...","distanceFromStart":${Math.round(distKm * 0.75)},"distanceRemaining":${Math.round(distKm * 0.25)},"rating":4.4},
-  {"id":"ai-5","name":"...","type":"descanso","description":"...","why":"...","distanceFromStart":${Math.round(distKm * 0.9)},"distanceRemaining":${Math.round(distKm * 0.1)},"rating":4.3}
+  {"id":"ai-1","name":"Nombre real","type":"mirador","description":"Descripción breve","why":"Por qué parar","distanceFromStart":${Math.round(distKm * 0.25)},"distanceRemaining":${Math.round(distKm * 0.75)},"rating":4.5},
+  {"id":"ai-2","name":"Nombre real","type":"cafe","description":"Descripción breve","why":"Por qué parar","distanceFromStart":${Math.round(distKm * 0.5)},"distanceRemaining":${Math.round(distKm * 0.5)},"rating":4.4},
+  {"id":"ai-3","name":"Nombre real","type":"restaurante","description":"Descripción breve","why":"Por qué parar","distanceFromStart":${Math.round(distKm * 0.7)},"distanceRemaining":${Math.round(distKm * 0.3)},"rating":4.5},
+  {"id":"ai-4","name":"Nombre real","type":"foto","description":"Descripción breve","why":"Por qué parar","distanceFromStart":${Math.round(distKm * 0.9)},"distanceRemaining":${Math.round(distKm * 0.1)},"rating":4.3}
 ]
 Tipos válidos: mirador, cafe, restaurante, foto, descanso, moto-cafe, combustible`;
 
@@ -76,9 +85,15 @@ export async function analyzeWithAI(
 ): Promise<AnalysisResult> {
   const origin = base.route.origin?.name ?? "origen";
   const dest   = base.route.destination.name;
+  const destCoords = base.route.destination.coordinates;
   const distKm = routeData?.distanceKm ?? 0;
 
-  // Run enrichment + stops generation in parallel
+  // Real OSM stops (trustworthy, geographically accurate)
+  const osmStops = base.bestStops.filter(s => !s.id.startsWith("ai-"));
+
+  // Only ask AI for stops when OSM found fewer than 2 real places
+  const needsAIStops = osmStops.length < 2;
+
   const [enrichment, aiStops] = await Promise.allSettled([
     callClaude(buildEnrichmentPrompt(base, weather, routeData, stops), 1400).then(raw => parseJSON<Partial<{
       recommendation: string;
@@ -92,15 +107,16 @@ export async function analyzeWithAI(
       aiSummary: string;
       summary: Partial<Pick<AnalysisResult["summary"], "recommendation">>;
     }>>(raw)),
-    generateStops(origin, dest, distKm),
+    needsAIStops
+      ? generateStops(origin, dest, distKm, destCoords)
+      : Promise.resolve([] as BestStop[]),
   ]);
 
   const e = enrichment.status === "fulfilled" ? enrichment.value : {};
-  const newStops = aiStops.status === "fulfilled" ? aiStops.value : base.bestStops;
+  const aiStopsList = aiStops.status === "fulfilled" ? aiStops.value : [];
 
-  // Merge OSM stops with AI stops (prefer AI if route has good data, else keep OSM)
-  const osmStops = base.bestStops.filter(s => !s.id.startsWith("ai-"));
-  const mergedStops = newStops.length > 0 ? newStops : (osmStops.length > 0 ? osmStops : base.bestStops);
+  // Prefer real OSM stops; only use AI stops if OSM couldn't find anything
+  const mergedStops = osmStops.length >= 2 ? osmStops : (aiStopsList.length > 0 ? aiStopsList : base.bestStops);
 
   return {
     ...base,
