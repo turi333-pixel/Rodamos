@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3385ff"/>
+      <stop offset="50%" stop-color="#0066cc"/>
+      <stop offset="100%" stop-color="#5b2df8"/>
+    </linearGradient>
+    <linearGradient id="moto" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#3385ff" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded rect -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="256" x2="512" y2="256" stroke="#3385ff" stroke-width="0.5" stroke-opacity="0.08"/>
+  <line x1="256" y1="0" x2="256" y2="512" stroke="#3385ff" stroke-width="0.5" stroke-opacity="0.08"/>
+
+  <!-- Glow orb -->
+  <circle cx="280" cy="220" r="140" fill="url(#glow)" fill-opacity="0.12"/>
+
+  <!-- Motorcycle silhouette (simplified) -->
+  <g transform="translate(80, 180)" filter="url(#shadow)">
+    <!-- Rear wheel -->
+    <circle cx="60" cy="130" r="52" fill="none" stroke="url(#moto)" stroke-width="12"/>
+    <circle cx="60" cy="130" r="16" fill="url(#glow)"/>
+
+    <!-- Front wheel -->
+    <circle cx="290" cy="130" r="52" fill="none" stroke="url(#moto)" stroke-width="12"/>
+    <circle cx="290" cy="130" r="16" fill="url(#glow)"/>
+
+    <!-- Frame -->
+    <path d="M60 130 L100 60 L190 50 L240 80 L290 130" fill="none" stroke="url(#moto)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Engine block -->
+    <rect x="120" y="80" width="80" height="52" rx="8" fill="url(#glow)" fill-opacity="0.25" stroke="url(#moto)" stroke-width="6"/>
+
+    <!-- Fuel tank -->
+    <path d="M155 50 Q185 35 215 50 L210 80 L165 80 Z" fill="url(#glow)" fill-opacity="0.45"/>
+
+    <!-- Seat -->
+    <path d="M100 60 Q140 42 200 48" fill="none" stroke="url(#moto)" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Fork -->
+    <path d="M240 80 L270 130" fill="none" stroke="url(#moto)" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- Handlebar -->
+    <path d="M225 72 L265 58" fill="none" stroke="url(#moto)" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Exhaust -->
+    <path d="M100 115 Q80 125 55 160" fill="none" stroke="url(#moto)" stroke-width="8" stroke-linecap="round" stroke-opacity="0.7"/>
+
+    <!-- Windscreen -->
+    <path d="M200 48 Q222 35 235 55" fill="none" stroke="#60a5fa" stroke-width="6" stroke-linecap="round" stroke-opacity="0.6"/>
+  </g>
+
+  <!-- Speed lines (motion feel) -->
+  <line x1="28" y1="310" x2="100" y2="310" stroke="#3385ff" stroke-width="3" stroke-opacity="0.3" stroke-linecap="round"/>
+  <line x1="20" y1="328" x2="80" y2="328" stroke="#3385ff" stroke-width="2" stroke-opacity="0.2" stroke-linecap="round"/>
+  <line x1="30" y1="292" x2="88" y2="292" stroke="#3385ff" stroke-width="2" stroke-opacity="0.15" stroke-linecap="round"/>
+
+  <!-- "R" wordmark bottom-right -->
+  <text x="390" y="440" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="800" fill="url(#glow)" fill-opacity="0.85" letter-spacing="-2">R</text>
+</svg>
