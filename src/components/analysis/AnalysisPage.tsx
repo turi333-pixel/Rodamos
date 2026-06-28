@@ -6,6 +6,9 @@ import { generateId } from "@/lib/utils";
 import { useAppStore } from "@/store";
 import { AnalysisLoader } from "@/components/ui/SkeletonCard";
 import { ScoreCard } from "@/components/cards/ScoreCard";
+import { RouteMapCard } from "@/components/cards/RouteMapCard";
+import { ElevationProfileCard } from "@/components/cards/ElevationProfileCard";
+import type { ElevPoint } from "@/components/cards/ElevationProfileCard";
 import { WeatherCard } from "@/components/cards/WeatherCard";
 import { RoadConditionsCard } from "@/components/cards/RoadConditionsCard";
 import { RiderPrepCard } from "@/components/cards/RiderPrepCard";
@@ -37,6 +40,8 @@ export function AnalysisPage() {
   // Find if the current result is already in history (so we can toggle its favourite)
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [elevPoints, setElevPoints] = useState<ElevPoint[]>([]);
+  const [elevTotalKm, setElevTotalKm] = useState(0);
 
   const historyEntry = history.find(
     (h) => h.route?.destination?.name === routeInput.destination?.name && h.analysis?.id === analysisResult?.id
@@ -249,6 +254,24 @@ export function AnalysisPage() {
               <div className="relative space-y-4">
                 {/* 1. Score */}
                 <ScoreCard result={result} />
+
+                {/* 1b. Route map */}
+                {result.route?.destination?.coordinates && (
+                  <RouteMapCard
+                    destination={result.route.destination.coordinates}
+                    destinationName={result.route.destination.name}
+                    origin={result.route.origin?.coordinates}
+                    originName={result.route.origin?.name}
+                    bestStops={result.bestStops}
+                    totalKm={result.summary?.distance}
+                    onElevationLoaded={(pts, km) => { setElevPoints(pts); setElevTotalKm(km); }}
+                  />
+                )}
+
+                {/* 1c. Elevation profile */}
+                {elevPoints.length >= 2 && (
+                  <ElevationProfileCard points={elevPoints} totalKm={elevTotalKm} />
+                )}
 
                 {/* 2. Weather Intelligence */}
                 {result.weather && <WeatherCard weather={result.weather} />}
