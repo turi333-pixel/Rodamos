@@ -8,6 +8,7 @@ import type {
   AppView,
   SavedRoute,
   UserProfile,
+  Motorcycle,
 } from "@/types";
 
 interface AppStore {
@@ -41,6 +42,12 @@ interface AppStore {
   addToHistory: (route: SavedRoute) => void;
   toggleFavorite: (id: string) => void;
   setHistory: (routes: SavedRoute[]) => void;
+
+  // Garage
+  motorcycles: Motorcycle[];
+  activeMotorcycleId: string | null;
+  addMotorcycle: (moto: Motorcycle) => void;
+  setActiveMotorcycle: (id: string) => void;
 
   // UI State
   mapExpanded: boolean;
@@ -89,6 +96,11 @@ export const useAppStore = create<AppStore>()(
         })),
       setHistory: (routes) => set({ history: routes }),
 
+      motorcycles: [],
+      activeMotorcycleId: null,
+      addMotorcycle: (moto) => set((s) => ({ motorcycles: [...s.motorcycles, moto] })),
+      setActiveMotorcycle: (id) => set({ activeMotorcycleId: id }),
+
       mapExpanded: false,
       setMapExpanded: (expanded) => set({ mapExpanded: expanded }),
       activeCard: null,
@@ -100,6 +112,8 @@ export const useAppStore = create<AppStore>()(
         history: s.history.slice(0, 20),
         favorites: s.favorites,
         user: s.user,
+        motorcycles: s.motorcycles,
+        activeMotorcycleId: s.activeMotorcycleId,
       }),
     }
   )
